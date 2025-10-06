@@ -1,4 +1,4 @@
-// This exercise provides far more options than the previous one so i decided
+// This exercise provides far more options than the one from last week so i decided
 // to list the controls all of them here:
 
 // select the limb you want to use with 1 or 2 for the arms and 3 or 4 for the legs
@@ -104,7 +104,7 @@ void initWindow()
 {
     glutInitWindowPosition(ORIGIN_X, ORIGIN_Y);
     glutInitWindowSize(WIDTH, HEIGHT);
-    glutCreateWindow("Leg");
+    glutCreateWindow("Body");
 }
 
 void initGL()
@@ -337,6 +337,8 @@ void speedMenu(int option)
     }
 }
 
+// this function overwrites allmos all values so if you want to change them
+// manually disable autorotation first
 void timerRotation(int step)
 {
     // time since the program started
