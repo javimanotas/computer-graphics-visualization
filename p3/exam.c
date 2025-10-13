@@ -1,17 +1,6 @@
-// This exercise provides far more options than the one from last week so i decided
-// to list the controls all of them here:
-
-// select the limb you want to use with 1 or 2 for the arms and 3 or 4 for the legs
-
-// rotate that limb with qawsed and hold shift to rotate the second part
-
-// left click and drag to rotate arround x and z axis
-// alt + left click and drag to rotate arround x and y axis
-// shift + left click and drag to rotate the second part
-// note 1: of course you can do a alt + shift + left click
-// note 2: the key modifiers must be pressed BEFORE clicking or it won't be detected
-
-// open the menu with right click
+// notas para la correccion:
+// hay que pulsar el alt antes del click si se desea rotar todo
+// se ha limitado la inclinación de la plataforma verde para prohibir rotaciones que "ropan" la forma
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -29,7 +18,6 @@
 #define BG_BRIGHTNESS 0.07
 
 #define OBJECTS_SIZE    1
-#define ROTATION_SPEED  1
 #define TIME_STEP      15
 
 typedef GLfloat Vec3[3];
@@ -44,12 +32,14 @@ typedef Vec3 Color;
 
 typedef struct
 {
-    GLfloat globalRotSpeed;
+    GLfloat inclination;
+    Rotation globalRot;
+    Rotation tilt;
     int perspective;
-    GLfloat maxRot;
-    int armAnimation;
     int w, h;
     Color palette;
+    GLfloat baseSpeed;
+    int animation;
 } Config;
 
 typedef struct
@@ -60,17 +50,15 @@ typedef struct
 
 
 
-Config config = {20.0f, 1, 45.0f, 1, 0, 0, {0.9f, 0.71f, 0.31f}};
-MouseClick click = {0, 0, 0};
-GLfloat oddRot = 20.0f, evenRot = 0.0f;
-Rotation globalRot = {0.0f, 0.0f, 0.0f};
+Config config = {0.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 1, 0, 0, {1.0f, 1.0f, 0.5f}, 30.0f, 1};
 
+MouseClick click = {0, 0, 0};
 
 void initWindow()
 {
     glutInitWindowPosition(ORIGIN_X, ORIGIN_Y);
     glutInitWindowSize(WIDTH, HEIGHT);
-    glutCreateWindow("Body");
+    glutCreateWindow("Exam");
 }
 
 void initGL()
@@ -99,16 +87,14 @@ void reshape(int width, int height)
     }
     else       
     {
-        glOrtho(-5, 5, -5, 5, 1, 100);
+        glOrtho(-8, 8, -8, 8, 1, 100);
     }
 
     glMatrixMode(GL_MODELVIEW);
 }
 
-void drawCube()
+void drawCube(GLfloat r, GLfloat g, GLfloat b)
 {
-    GLfloat r = config.palette[0], g = config.palette[1], b = config.palette[2];
-
     // One color is used for the faces perpendicular to each axis
 
     GLfloat x = (GLfloat)OBJECTS_SIZE / 2;
@@ -177,32 +163,52 @@ void drawBase()
         
         glPushMatrix();
             glTranslatef(0.0f, 0.0f, -1.0f);
-            glColor3f(0.0f, 0.4f, 1.0f);
-            glutSolidCone(2.0, 2.0, 20, 20);    
-            gluCylinder(quadratic, 2.0, 2.0, 1.0, 20, 20);   
+            glColor3f(1.0f, 0.7f, 0.5f);
+            glutSolidCone(3.0, 2.0, 30, 30);    
+            gluCylinder(quadratic, 3.0, 3.0, 1.0, 30, 30);   
         glPopMatrix();
 
-        glColor3f(1.0f, 0.4f, 0.0f);
-        glutSolidCone(2.0, 2.0, 20, 20);
+        glColor3f(0.5f, 0.7f, 1.0f);
+        glutSolidCone(3.0, 2.0, 20, 20);
     glPopMatrix();
 
     gluDeleteQuadric(quadratic);
 }
 
-void drawArm(int i)
+void drawArm()
 {
     glPushMatrix();
-        glRotatef(i % 2 == 0 ? evenRot : oddRot, 0.0f, 0.0f, 1.0f);
+        glRotatef(config.inclination, 0.0f, 0.0f, 1.0f);
         glTranslatef(OBJECTS_SIZE * 2.0f, 0.0f, 0.0f);
 
         glPushMatrix();
             glScalef(4.0f, 0.3f, 0.3f);
-            drawCube();
+            drawCube(0.5f, 0.5f, 0.5f);
         glPopMatrix();
 
         glTranslatef(OBJECTS_SIZE * 2.0f, 0.0f, 0.0f);
-        glRotatef(i % 2 == 0 ? evenRot : oddRot, 0.0f, 0.0f, -1.0f);
-        drawCube();
+        glRotatef(config.inclination, 0.0f, 0.0f, -1.0f);
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+        glColor3f(0.4f, 1.0f, 0.4f);
+        glTranslatef(0.0f, 0.0f, -0.8f);
+        applyRotation(config.tilt);
+        glutSolidCone(2.0, 1.0, 20, 20);
+
+        // squares
+        glScalef(0.5f, 0.5f, 0.5f);
+
+        glTranslatef(1.0f, 1.0f, -0.5f);
+        drawCube(config.palette[0], config.palette[1], config.palette[2]);
+        
+        glTranslatef(-2.0f, 0.0f, 0.0f);
+        drawCube(config.palette[0], config.palette[1], config.palette[2]);
+        
+        glTranslatef(0.0f, -2.0f, 0.0f);
+        drawCube(config.palette[0], config.palette[1], config.palette[2]);
+        
+        glTranslatef(2.0f, 0.0f, 0.0f);
+        drawCube(config.palette[0], config.palette[1], config.palette[2]);
+        
     glPopMatrix();
 }
 
@@ -212,17 +218,12 @@ void display()
     glLoadIdentity();
 
     // draw all objects with their respective transformations away from the camera
-    glTranslatef(0.0, -1.5, -18.0);
+    glTranslatef(0.0, -2.25, -18.0);
 
-    applyRotation(globalRot);
+    applyRotation(config.globalRot);
     drawBase();
     glTranslatef(0.0f, 2.0f, 0.0f);
-    
-    for (int i = 0; i < 6; i++)
-    {
-        drawArm(i);
-        glRotatef(60.0f, 0.0f, 1.0f, 0.0f);
-    }
+    drawArm();
 
     glFlush();
     glutSwapBuffers();
@@ -247,29 +248,34 @@ void manageKeyboard(unsigned char keyPressed, int _x, int _y)
         break;
 
     case 'r':
-        config.globalRotSpeed *= -1;
+        config.baseSpeed *= -1;
         break;
 
     case 's':
-        config.armAnimation = 1 - config.armAnimation;
+        config.animation = 1 - config.animation;
         break;
     }
 }
 
-void heightMenu(int option)
+int sign(int x)
+{
+    return x > 0 ? 1 : -1;
+}
+
+void speedMenu(int option)
 {
     switch (option)
     {
     case 0:
-        config.maxRot = 30.0f;
+        config.baseSpeed = 30.0f * sign(config.baseSpeed);
         break;
     
     case 1:
-        config.maxRot = 45.0f;
+        config.baseSpeed = 60.0f * sign(config.baseSpeed);
         break;
 
     case 2:
-        config.maxRot = 70.0f;
+        config.baseSpeed = 90.0f * sign(config.baseSpeed);
         break;
     }
 }
@@ -280,9 +286,9 @@ void colorMenu(int option)
     {
     case 0:
         
-        config.palette[0] = 0.9f; 
-        config.palette[1] = 0.71f;
-        config.palette[2] = 0.31f;
+        config.palette[0] = 1.0f; 
+        config.palette[1] = 1.0f;
+        config.palette[2] = 0.5f;
         break;
     
     case 1:
@@ -296,6 +302,12 @@ void colorMenu(int option)
         config.palette[1] = 0.31f;
         config.palette[2] = 0.71f;
         break;
+
+    case 3:
+        config.palette[0] = 0.9f;
+        config.palette[1] = 0.5f; 
+        config.palette[2] = 0.31f;
+        break;
     }
 }
 
@@ -304,6 +316,8 @@ void exitMenu(int option)
     exit(0);
 }
 
+// aux function i made for remapping a [-1, 1] sine wave into [min, max]
+// very usefull for animations depending on time
 float lerpSine(float in, float min, float max)
 {
     in += 1.0f;
@@ -315,36 +329,37 @@ float lerpSine(float in, float min, float max)
 
 void timerRotation(int step)
 {    
-    globalRot[1] += 1.0f / (float)TIME_STEP * config.globalRotSpeed;
-    glutTimerFunc(TIME_STEP, timerRotation, step + 1);
+    config.globalRot[1] += 1.0f / (float)TIME_STEP * config.baseSpeed * config.animation;
+    config.tilt[2] += 1.0f / (float)TIME_STEP * abs(config.baseSpeed) * 3.0f * config.animation;
+    glutTimerFunc(TIME_STEP, timerRotation, step);
 }
 
 void timerPosition(int step)
 {
     float time = (float) step / (float)TIME_STEP;
-    oddRot = lerpSine(sin(time * 0.2f), -20.0f, config.maxRot);
-    evenRot = lerpSine(sin(time * 0.2f + 3.1415), -20.0f, config.maxRot);
+    config.inclination = lerpSine(-cos(time * 0.8f), 0.0f, 45.0f);
 
-    glutTimerFunc(TIME_STEP, timerPosition, step + config.armAnimation);
+    glutTimerFunc(TIME_STEP, timerPosition, step + config.animation);
 }
 
 void createMenus()
 {
-    int _heightMenu = glutCreateMenu(heightMenu);
+    int _speedMenu = glutCreateMenu(speedMenu);
     glutAddMenuEntry("Low", 0);
     glutAddMenuEntry("Medium", 1);
     glutAddMenuEntry("High", 2);
 
     int _colorMenu = glutCreateMenu(colorMenu);
-    glutAddMenuEntry("A", 0);
-    glutAddMenuEntry("B", 1);
-    glutAddMenuEntry("C", 2);
+    glutAddMenuEntry("Yellow", 0);
+    glutAddMenuEntry("Cyan", 1);
+    glutAddMenuEntry("Magenta", 2);
+    glutAddMenuEntry("Orange", 3);
 
     int _exitMenu = glutCreateMenu(exitMenu);
     glutAddMenuEntry("Confirm exit", 0);
 
     glutCreateMenu(NULL);
-    glutAddSubMenu("Height", _heightMenu);
+    glutAddSubMenu("Speed", _speedMenu);
     glutAddSubMenu("Color", _colorMenu);
     glutAddSubMenu("Exit", _exitMenu);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
@@ -363,16 +378,22 @@ void mouse(int button, int state, int x, int y)
 
 void motion(int x, int y)
 {
-    float incX = (float)(x - click.x);
-    float incY = (float)(y - click.y) * 0.2f;
+    float incX = (float)(x - click.x) * 0.15f;
+    float incY = (float)(y - click.y) * 0.15f;
 
     if (click.alt)
     {
-        globalRot[1] += incX;
+        config.globalRot[0] += incY;
     }
     else
     {
-        globalRot[0] += incY;
+        config.tilt[1] += incX;
+        config.tilt[0] += incY;
+
+        if (config.tilt[1] < -30.0f) config.tilt[1] = -30.0f;
+        if (config.tilt[1] > 30.0f) config.tilt[1] = 30.0f;
+        if (config.tilt[0] < -15.0f) config.tilt[0] = -15.0f;
+        if (config.tilt[0] > 15.0f) config.tilt[0] = 15.0f;
     }
 
     click.x = x;
