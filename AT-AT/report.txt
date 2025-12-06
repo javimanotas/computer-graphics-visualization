@@ -1,0 +1,7 @@
+I enabled Front in depth for reference images to make it easier see the details of the reference while modeling.
+
+For the body extrusions and a mirror modifier where used. A knife was used for the details.
+
+Alt+E: extrude faces along normal.
+Alt+S: move face along normal.
+
