@@ -2,8 +2,9 @@ I enabled Front in depth for reference images to make it easier see the details 
 
 For the body extrusions and a mirror modifier where used. A knife was used for the details.
 
-Alt+E: extrude faces along normal.
+Alt+E: extrude faces along normal / extrude manifold (extrude deleting geometry).
 Alt+S: move face along normal.
 
 I created a material that assigns a color based on the normal.
+
 
