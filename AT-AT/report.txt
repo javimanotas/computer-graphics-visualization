@@ -7,4 +7,5 @@ Alt+S: move face along normal.
 
 I created a material that assigns a color based on the normal.
 
+TODO: back details!!!
 
