@@ -4,8 +4,3 @@ For the body extrusions and a mirror modifier where used. A knife was used for t
 
 Alt+E: extrude faces along normal / extrude manifold (extrude deleting geometry).
 Alt+S: move face along normal.
-
-I created a material that assigns a color based on the normal.
-
-TODO: back details!!!
-
